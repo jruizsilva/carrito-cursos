@@ -1,0 +1,16 @@
+@mixin boton($color){
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    padding: .5rem 0;
+    background: $color;
+}
+@mixin fondo($ruta){
+    background-image: url($ruta);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+@mixin box-sizing($valor){
+    box-sizing: $valor;
+}
