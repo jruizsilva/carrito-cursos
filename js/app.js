@@ -1,29 +1,31 @@
 // Funciones
+const startApp = () => {
+	getDataBD();
+};
 const agregarCurso = (e) => {
 	e.preventDefault();
 	if (e.target.classList.contains("boton")) {
 		const cursoSeleccionado = e.target.parentElement.parentElement;
 		const datosCurso = obtenerDatos(cursoSeleccionado);
 
-		// Valida si el curso ya se encuentra en el carrito
-		if (cursosEnCarrito.some((curso) => curso.id === datosCurso.id)) {
-			// Incrementamos la cantidad
-			cursosEnCarrito = cursosEnCarrito.map((curso) => {
-				if (curso.id === datosCurso.id) {
-					curso.cantidad++;
-					return curso;
-				} else {
-					return curso;
-				}
-			});
+		if (arrayCarrito.some((curso) => curso.id === datosCurso.id)) {
+			increaseCourse(datosCurso);
 		} else {
-			// Agregamos el curso
-			cursosEnCarrito = [...cursosEnCarrito, datosCurso];
+			arrayCarrito = [...arrayCarrito, datosCurso];
 		}
-		// Muestra los cursos agregados en el carrito
-		mostrarCurso();
-		console.log(cursosEnCarrito);
+		setDataDB();
+		getDataBD();
 	}
+};
+const increaseCourse = ({ id }) => {
+	arrayCarrito = arrayCarrito.map((curso) => {
+		if (curso.id === id) {
+			curso.cantidad++;
+			return curso;
+		} else {
+			return curso;
+		}
+	});
 };
 const obtenerDatos = (curso) => {
 	return {
@@ -36,21 +38,20 @@ const obtenerDatos = (curso) => {
 };
 const mostrarCurso = () => {
 	limpiarHTML();
-	cursosEnCarrito.forEach((curso) => {
+	const fragment = document.createDocumentFragment();
+	const template = document.querySelector("#template").content;
+	arrayCarrito.forEach((curso) => {
 		const { titulo, src, precio, cantidad, id } = curso;
-		const tableRow = document.createElement("tr");
-		tableRow.innerHTML = `
-        <td>
-            <img src="${src}" />
-        </td>
-        <td>${titulo}</td>
-        <td>${precio}</td>
-        <td>${cantidad}</td>
-        <td>
-            <a href="#" class="borrar-curso" data-id="${id}">X</a>
-        </td>`;
-		listaCursosDelCarrito.appendChild(tableRow);
+		template.querySelector("#template-img").setAttribute("src", src);
+		template.querySelector("#template-titulo").textContent = titulo;
+		template.querySelector("#template-precio").textContent = precio;
+		template.querySelector("#template-cantidad").textContent = cantidad;
+		template.querySelector("#template-btn").setAttribute("data-id", id);
+
+		const clone = template.cloneNode(true);
+		fragment.appendChild(clone);
 	});
+	listaCursosDelCarrito.appendChild(fragment);
 };
 const limpiarHTML = () => {
 	while (listaCursosDelCarrito.firstChild) {
@@ -61,15 +62,23 @@ const eliminarCurso = (e) => {
 	e.preventDefault();
 	if (e.target.classList.contains("borrar-curso")) {
 		const idCurso = e.target.getAttribute("data-id");
-		cursosEnCarrito = cursosEnCarrito.filter((curso) => curso.id !== idCurso);
+		arrayCarrito = arrayCarrito.filter((curso) => curso.id !== idCurso);
 
-		mostrarCurso();
+		setDataDB();
+		getDataBD();
 	}
 };
 const vaciarCarrito = (e) => {
 	e.preventDefault();
-	cursosEnCarrito = [];
+	arrayCarrito = [];
 	limpiarHTML();
+};
+const setDataDB = () => {
+	localStorage.setItem("cursos", JSON.stringify(arrayCarrito));
+};
+const getDataBD = () => {
+	arrayCarrito = JSON.parse(localStorage.getItem("cursos")) || [];
+	mostrarCurso();
 };
 
 // Variables
@@ -77,11 +86,12 @@ const listaCursos = document.querySelector(".cursos");
 const listaCursosDelCarrito = document.querySelector("#lista-carrito tbody");
 const carrito = document.querySelector(".carrito-compras");
 const btnVaciarCarrito = document.querySelector("#btn-vaciar-carrito");
-let cursosEnCarrito = [];
+let arrayCarrito = [];
 
 const cargarEventListeners = () => {
 	listaCursos.addEventListener("click", agregarCurso);
 	carrito.addEventListener("click", eliminarCurso);
 	btnVaciarCarrito.addEventListener("click", vaciarCarrito);
+	document.addEventListener("DOMContentLoaded", startApp);
 };
 cargarEventListeners();
